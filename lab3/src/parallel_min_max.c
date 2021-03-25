@@ -109,7 +109,33 @@ int main(int argc, char **argv) {
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
+  FILE* file;
+  int** pipefd;
+   if (pnum > array_size / 3) {
+         pnum = array_size / 3;
+	}
+
+   if (with_files) {
+      file = fopen("file.txt", "w");
+    }
+  else {
+      pipefd = (int**)malloc(sizeof(int*)*(pnum+1)); 
+      
+    }
+
   for (int i = 0; i < pnum; i++) {
+
+     if (!with_files)
+    {
+        pipefd[i]=(int*)malloc(sizeof(int)*2);
+        
+        if (pipe(pipefd[i])<0)
+        {
+            printf("Error"); 
+            return 1;
+        }
+    }
+
     pid_t child_pid = fork();
     if (child_pid >= 0) {
       // successful fork
@@ -118,11 +144,31 @@ int main(int argc, char **argv) {
         // child process
 
         // parallel somehow
+        
+        struct MinMax result;
+ 
+        if (i != pnum - 1) { 
+            result = GetMinMax(array, i * array_size / pnum, (i + 1) * array_size / pnum - 1);
+        }
+        else {
+            result = GetMinMax(array, i * array_size / pnum, array_size);
+        }
 
         if (with_files) {
           // use files here
-        } else {
+
+          fwrite(&result.min, sizeof(int), 1 , file); 
+          fwrite(&result.max, sizeof(int), 1 , file); 
+        
+        } 
+        else {
           // use pipe here
+          
+          close(pipefd[i][0]); 
+          write(pipefd[i][1], &result.max, sizeof(int)); 
+          write(pipefd[i][1],&result.min, sizeof(int)); 
+          close(pipefd[i][1]); 
+
         }
         return 0;
       }
@@ -133,8 +179,15 @@ int main(int argc, char **argv) {
     }
   }
 
+   if (with_files) {
+
+        fclose(file);
+   }
+
   while (active_child_processes > 0) {
     // your code here
+
+     wait(NULL);
 
     active_child_processes -= 1;
   }
@@ -149,13 +202,39 @@ int main(int argc, char **argv) {
 
     if (with_files) {
       // read from files
-    } else {
+
+	file = fopen("file.txt", "r");
+	fread(&max, sizeof(int), 1, file);
+    fread(&min, sizeof(int), 1, file);
+
+    }
+
+    else {
       // read from pipes
+
+	    read(pipefd[i][0], &max, sizeof(int));
+        read(pipefd[i][0], &min, sizeof(int));
+        close(pipefd[i][0]);
+	    
     }
 
     if (min < min_max.min) min_max.min = min;
     if (max > min_max.max) min_max.max = max;
   }
+
+  
+  if (with_files) {
+      
+      fclose(file);
+      remove("file.txt");
+
+   }
+   else {
+
+       free(pipefd) ;
+       
+   }
+  
 
   struct timeval finish_time;
   gettimeofday(&finish_time, NULL);
