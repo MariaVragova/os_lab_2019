@@ -1,0 +1,24 @@
+CC=gcc
+CFLAGS=-I.
+
+all: task_1 task_3
+
+task_1 : parallel_min_max
+    rm utils.o find_min_max.o
+
+task_3 : process_memory
+
+process_memory : 
+    $(CC) process_memory.c -o process_memory
+
+parallel_min_max : utils.o find_min_max.o utils.h find_min_max.h
+	$(CC) parallel_min_max.c utils.o find_min_max.o -o parallel_min_max $(CFLAGS)
+
+utils.o : utils.h
+	$(CC) -o utils.o -c utils.c $(CFLAGS)
+
+find_min_max.o : utils.h find_min_max.h
+	$(CC) -o find_min_max.o -c find_min_max.c $(CFLAGS)
+
+clean :
+	rm utils.o find_min_max.o process_memory parallel_min_max
