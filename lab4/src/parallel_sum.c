@@ -23,7 +23,7 @@ int Sum(const struct SumArgs *args) {
 */
 void *ThreadSum(void *args) {
   struct SumArgs *sum_args = (struct SumArgs *)args;
-  return (void *)(size_t)Sum(sum_args);
+  return (void *)(size_t)Sum_1(sum_args);
 }
 
 int main(int argc, char **argv) {
@@ -35,9 +35,9 @@ int main(int argc, char **argv) {
    */
 
   uint32_t threads_num = -1;
-  uint32_t array_size = 1;
+  uint32_t array_size = -1;
   uint32_t seed = -1;
-  pthread_t threads[threads_num];
+ 
 
   while (1) {
 
@@ -101,6 +101,8 @@ int main(int argc, char **argv) {
         printf("getopt returned character code 0%o?\n", c);
     }
   }
+
+   pthread_t threads[threads_num];
 
    if (optind < argc) {
     printf("Has at least one no option argument\n");
