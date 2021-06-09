@@ -11,6 +11,7 @@
 #include <netinet/ip.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include "multmodulo.h"
 
 struct Server {
   char ip[255]; // IP-адрес
